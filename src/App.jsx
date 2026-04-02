@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useTimetableStore } from './store/useTimetableStore';
 import TimeTableGrid from './components/TimeTableGrid';
 import TeacherReport from './components/TeacherReport';
-import { ToastProvider, useToast } from './components/ToastProvider';
+import ClassWeekFull from './components/ClassWeekFull';
+import { ToastProvider } from './components/ToastProvider';
+import { useToast } from './components';
 import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2 } from 'lucide-react';
 import './App.css';
 
@@ -13,6 +15,7 @@ function AppContent() {
     document.documentElement.setAttribute('data-theme', savedTheme);
     return savedTheme === 'dark';
   });
+  const [selectedClass, setSelectedClass] = useState(null);
   
   const { clearTimetable, timetable } = useTimetableStore();
   const toast = useToast();
@@ -70,6 +73,16 @@ function AppContent() {
   const totalPeriods = Object.values(timetable).length;
   const filledPeriods = Object.values(timetable).filter(c => c.teacherId).length;
   const fillRate = totalPeriods ? Math.round((filledPeriods / totalPeriods) * 100) : 0;
+
+  // If a class is selected for full view, show that
+  if (selectedClass) {
+    return (
+      <ClassWeekFull 
+        classData={selectedClass} 
+        onBack={() => setSelectedClass(null)} 
+      />
+    );
+  }
 
   return (
     <div className="app-container flex">
@@ -159,7 +172,11 @@ function AppContent() {
         </header>
 
         <div className="content-area">
-          {activeTab === 'timetable' ? <TimeTableGrid /> : <TeacherReport />}
+          {activeTab === 'timetable' ? (
+            <TimeTableGrid onClassClick={setSelectedClass} />
+          ) : (
+            <TeacherReport />
+          )}
         </div>
       </main>
     </div>

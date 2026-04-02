@@ -208,19 +208,43 @@
   color: var(--primary);
   border-right: 2px solid var(--gray-300);
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
-[data-theme="dark"] .class-name-cell {
-  background: var(--gray-800);
-  border-right-color: var(--gray-600);
-}
-
-.timetable tbody tr:hover .class-name-cell {
+.class-name-cell:hover {
   background: linear-gradient(90deg, var(--primary-lighter) 0%, var(--gray-50) 100%);
+  border-right-color: var(--primary);
 }
 
-[data-theme="dark"] .timetable tbody tr:hover .class-name-cell {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, var(--gray-800) 100%);
+[data-theme="dark"] .class-name-cell:hover {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, var(--gray-800) 100%);
+}
+
+.class-name-cell-clickable {
+  position: relative;
+}
+
+.class-name-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.class-name-content strong {
+  color: var(--primary);
+}
+
+.class-name-cell .class-name-content svg {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all var(--transition-base);
+  color: var(--primary);
+}
+
+.class-name-cell:hover .class-name-content svg {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ============================================

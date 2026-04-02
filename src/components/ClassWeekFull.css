@@ -1,0 +1,364 @@
+/* ============================================
+   CLASS WEEK FULL PAGE VIEW
+   ============================================ */
+.class-week-full {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 2rem;
+  animation: fadeIn var(--transition-slow);
+}
+
+/* Action Bar */
+.class-week-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.action-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ============================================
+   PRINTABLE CONTENT
+   ============================================ */
+.class-week-printable {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-lg);
+  max-width: 100%;
+  overflow: auto;
+}
+
+[data-theme="dark"] .class-week-printable {
+  background: var(--gray-800);
+}
+
+/* Print Header */
+.class-week-print-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2rem;
+  border-bottom: 3px solid var(--primary);
+  margin-bottom: 2rem;
+}
+
+.print-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-square {
+  width: 60px;
+  height: 60px;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.print-logo h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-extrabold);
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: var(--leading-tight);
+}
+
+.print-logo p {
+  margin: 0.25rem 0 0 0;
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.print-class-info {
+  text-align: right;
+}
+
+.print-class-info h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+}
+
+[data-theme="dark"] .print-class-info h2 {
+  color: var(--gray-50);
+}
+
+.print-class-info p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+}
+
+/* ============================================
+   TIMETABLE TABLE
+   ============================================ */
+.class-week-table-print {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.class-week-table-print th,
+.class-week-table-print td {
+  border: 1px solid var(--gray-300);
+  padding: 0;
+  vertical-align: top;
+}
+
+[data-theme="dark"] .class-week-table-print th,
+[data-theme="dark"] .class-week-table-print td {
+  border-color: var(--gray-600);
+}
+
+/* Table Headers */
+.class-week-table-print th {
+  background: linear-gradient(180deg, var(--gray-100) 0%, var(--gray-50) 100%);
+  padding: 1rem 0.75rem;
+  font-weight: var(--font-semibold);
+  color: var(--gray-700);
+  text-align: center;
+  border-bottom: 2px solid var(--primary);
+}
+
+[data-theme="dark"] .class-week-table-print th {
+  background: linear-gradient(180deg, var(--gray-700) 0%, var(--gray-600) 100%);
+  color: var(--gray-200);
+}
+
+.day-col {
+  width: 140px;
+  text-align: left !important;
+  border-right: 2px solid var(--gray-300);
+}
+
+[data-theme="dark"] .day-col {
+  border-right-color: var(--gray-600);
+}
+
+.period-col {
+  width: 1fr;
+}
+
+.period-label {
+  display: block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--gray-500);
+  margin-bottom: 0.25rem;
+}
+
+.period-number {
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--primary);
+}
+
+/* Day Cells */
+.day-cell {
+  background: var(--gray-50);
+  padding: 1rem !important;
+  border-right: 2px solid var(--gray-300);
+  border-bottom: 1px solid var(--gray-300);
+}
+
+[data-theme="dark"] .day-cell {
+  background: var(--gray-700);
+  border-right-color: var(--gray-600);
+  border-bottom-color: var(--gray-600);
+}
+
+.day-cell strong {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-900);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+[data-theme="dark"] .day-cell strong {
+  color: var(--gray-50);
+}
+
+/* Week Cells */
+.week-cell-wrapper-print {
+  min-height: 80px;
+  position: relative;
+}
+
+.week-cell-wrapper-print .timetable-cell {
+  min-height: 80px;
+  border-radius: 0;
+  height: 100%;
+}
+
+/* Compact editing in class week view */
+.class-week-printable .timetable-cell.editing {
+  min-width: 180px;
+  min-height: 130px;
+  padding: 0.5rem;
+  position: absolute;
+  z-index: 10000;
+}
+
+.class-week-printable .cell-select {
+  padding: 0.375rem 0.5rem;
+  font-size: var(--text-xs);
+}
+
+.class-week-printable .edit-actions .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+}
+
+.class-week-printable .override-toggle {
+  font-size: 0.65rem;
+  padding: 0.375rem 0.5rem;
+}
+
+/* ============================================
+   PRINT FOOTER
+   ============================================ */
+.print-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+[data-theme="dark"] .print-footer {
+  border-top-color: var(--gray-600);
+}
+
+.print-footer p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+
+  .no-print,
+  .class-week-actions {
+    display: none !important;
+  }
+
+  .class-week-full {
+    padding: 0;
+    background: white;
+  }
+
+  .class-week-printable {
+    box-shadow: none;
+    padding: 1rem;
+  }
+
+  .class-week-print-header {
+    border-bottom-color: var(--primary);
+  }
+
+  .logo-square {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .class-week-table-print th {
+    background: var(--gray-100) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .class-week-table-print th,
+  .class-week-table-print td {
+    border-color: var(--gray-300) !important;
+  }
+
+  .day-cell {
+    background: var(--gray-50) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure colors print correctly */
+  .subject-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+  .class-week-full {
+    padding: 1rem;
+  }
+
+  .class-week-actions {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .class-week-printable {
+    padding: 1.25rem;
+  }
+
+  .class-week-print-header {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .print-class-info {
+    text-align: center;
+  }
+
+  .print-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}

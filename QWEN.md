@@ -7,6 +7,8 @@ A dynamic web application for planning and managing school timetables for classe
 ### Key Features
 
 - **Interactive Timetable Grid**: Drag-and-drop interface for assigning teachers/subjects to class periods
+- **Full Week Class View**: Click any class name to view complete weekly timetable in full-page view
+- **PDF Export**: Download any class timetable as PDF with print-optimized formatting
 - **Teacher Management**: Track teacher workloads, allowed subjects, and max periods per week
 - **Class Configuration**: Define classes with subject quotas and period distributions
 - **Conflict Detection**: Prevents double-booking teachers across simultaneous periods
@@ -25,6 +27,7 @@ A dynamic web application for planning and managing school timetables for classe
 | Drag & Drop | @hello-pangea/dnd 18.0.1 |
 | Icons | Lucide React 1.7.0 |
 | Utilities | clsx 2.1.1 |
+| PDF Export | html2pdf.js |
 | Styling | Vanilla CSS (CSS variables, flexbox, grid, glassmorphism) |
 | Linting | ESLint 9 with react-hooks and react-refresh plugins |
 
@@ -34,21 +37,25 @@ A dynamic web application for planning and managing school timetables for classe
 D:\Project\Timetable\
 ├── src/
 │   ├── components/
-│   │   ├── TimeTableGrid.jsx    # Main grid view (days × periods × classes)
-│   │   ├── TimeTableCell.jsx    # Individual cell with edit/override modes
-│   │   ├── TeacherReport.jsx    # Teacher utilization dashboard
-│   │   └── *.css                # Component styles
+│   │   ├── TimeTableGrid.jsx      # Main grid view (days × periods × classes)
+│   │   ├── TimeTableCell.jsx      # Individual cell with edit/override modes
+│   │   ├── TeacherReport.jsx      # Teacher utilization dashboard
+│   │   ├── ClassWeekFull.jsx      # Full-page class week view with PDF export
+│   │   ├── Toast.jsx              # Toast notification component
+│   │   ├── ToastProvider.jsx      # Toast context provider
+│   │   └── *.css                  # Component styles
 │   ├── store/
-│   │   └── useTimetableStore.js # Zustand store with persistence
-│   ├── App.jsx                  # Main app with sidebar navigation
-│   ├── App.css                  # Layout styles
-│   ├── index.css                # Global styles, CSS variables, theme
-│   └── main.jsx                 # Entry point
+│   │   └── useTimetableStore.js   # Zustand store with persistence
+│   ├── App.jsx                    # Main app with sidebar navigation
+│   ├── App.css                    # Layout styles
+│   ├── index.css                  # Global styles, CSS variables, theme
+│   ├── animations.css             # Animation definitions
+│   └── main.jsx                   # Entry point
 ├── public/
 │   ├── favicon.svg
 │   └── icons.svg
 ├── docs/
-│   └── implementation_plan.md   # Detailed requirements and roadmap
+│   └── implementation_plan.md     # Detailed requirements and roadmap
 ├── package.json
 ├── vite.config.js
 └── eslint.config.js

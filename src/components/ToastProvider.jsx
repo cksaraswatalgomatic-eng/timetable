@@ -25,18 +25,16 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={toast}>
       {children}
       <div className="toast-container">
-        {toasts.map(toast => (
+        {toasts.map(toastItem => (
           <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            duration={toast.duration}
-            onClose={() => removeToast(toast.id)}
+            key={toastItem.id}
+            message={toastItem.message}
+            type={toastItem.type}
+            duration={toastItem.duration}
+            onClose={() => removeToast(toastItem.id)}
           />
         ))}
       </div>
     </ToastContext.Provider>
   );
 }
-
-export { useToast } from './useToast';
