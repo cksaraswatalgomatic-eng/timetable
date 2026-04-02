@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTimetableStore } from './store/useTimetableStore';
+import { MultiSelectProvider } from './store/MultiSelectContext';
 import TimeTableGrid from './components/TimeTableGrid';
 import TeacherReport from './components/TeacherReport';
 import ClassWeekFull from './components/ClassWeekFull';
@@ -186,7 +187,9 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <AppContent />
+      <MultiSelectProvider>
+        <AppContent />
+      </MultiSelectProvider>
     </ToastProvider>
   );
 }

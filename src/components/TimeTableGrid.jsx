@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useTimetableStore } from '../store/useTimetableStore';
+import { useMultiSelect } from '../store/MultiSelectContext';
 import TimeTableCell from './TimeTableCell';
-import { ChevronRight } from 'lucide-react';
+import BulkEditPanel from './BulkEditPanel';
+import { ChevronRight, MousePointer2, CheckSquare } from 'lucide-react';
 import './TimeTableGrid.css';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -9,28 +11,58 @@ const periods = [1, 2, 3, 4, 'BREAK', 5, 6, 7, 8];
 
 export default function TimeTableGrid({ onClassClick }) {
     const { classes } = useTimetableStore();
-    const [selectedDay, setSelectedDay] = useState('Monday');
+    const [selectedDay, setSelectedDay] = React.useState('Monday');
+    const { isEnabled, selectedCells, endDrag, clearSelection, toggleEnabled, containerRef } = useMultiSelect();
+
+    // Global mouse up to end drag
+    useEffect(() => {
+        const handleMouseUp = () => {
+            endDrag();
+        };
+
+        document.addEventListener('mouseup', handleMouseUp);
+        return () => document.removeEventListener('mouseup', handleMouseUp);
+    }, [endDrag]);
 
     return (
-        <div className="timetable-container glass flex-col">
+        <div className="timetable-container glass flex-col" ref={containerRef}>
             <div className="timetable-header items-center justify-between p-4 flex">
                 <div>
                     <h2 style={{ margin: 0 }}>Class Schedule Editor</h2>
                     <p className="text-muted text-sm mt-2" style={{ margin: 0 }}>
-                        Click on a class name to view full week timetable
+                        {isEnabled 
+                            ? `Drag to select multiple cells • Ctrl+Click to toggle • ${selectedCells.length} selected`
+                            : 'Click on a class name to view full week timetable'}
                     </p>
                 </div>
 
-                <div className="day-selector flex gap-2">
-                    {days.map(day => (
-                        <button
-                            key={day}
-                            className={`btn ${selectedDay === day ? 'btn-primary' : ''} glass`}
-                            onClick={() => setSelectedDay(day)}
-                        >
-                            {day}
-                        </button>
-                    ))}
+                <div className="header-actions items-center gap-2 flex">
+                    {/* Multi-select toggle */}
+                    <button 
+                        className={`btn btn-sm ${isEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => {
+                            clearSelection();
+                            toggleEnabled();
+                        }}
+                        title="Enable multi-select mode"
+                    >
+                        {isEnabled ? <CheckSquare size={16} /> : <MousePointer2 size={16} />}
+                        <span className="hidden-mobile">
+                            {isEnabled ? `Selecting (${selectedCells.length})` : 'Multi-Select'}
+                        </span>
+                    </button>
+                    
+                    <div className="day-selector flex gap-2">
+                        {days.map(day => (
+                            <button
+                                key={day}
+                                className={`btn ${selectedDay === day ? 'btn-primary' : ''} glass`}
+                                onClick={() => setSelectedDay(day)}
+                            >
+                                {day}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -83,6 +115,9 @@ export default function TimeTableGrid({ onClassClick }) {
                     </tbody>
                 </table>
             </div>
+
+            {/* Bulk Edit Panel */}
+            <BulkEditPanel />
         </div>
     );
 }

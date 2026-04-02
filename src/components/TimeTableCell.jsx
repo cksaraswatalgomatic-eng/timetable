@@ -1,11 +1,14 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTimetableStore } from '../store/useTimetableStore';
+import { useMultiSelect } from '../store/MultiSelectContext';
 import { AlertTriangle, Edit2 } from 'lucide-react';
 import './TimeTableCell.css';
 
 export default function TimeTableCell({ cellId, day, period }) {
     const { timetable, teachers, assignCell, overrideCell, clearCell, getPeriodConflicts } = useTimetableStore();
+    const { isEnabled, isSelected, toggleCellSelection, startDrag, updateDrag } = useMultiSelect();
     const [isEditing, setIsEditing] = useState(false);
+    const cellRef = useRef(null);
 
     const cellData = timetable[cellId];
     
@@ -57,6 +60,36 @@ export default function TimeTableCell({ cellId, day, period }) {
 
     const selectedTeacherObj = teachers.find(t => t.id === editTeacher);
 
+    // Handle mouse events for drag selection
+    const handleMouseDown = (e) => {
+        if (!isEnabled) return;
+        e.preventDefault();
+        startDrag(cellId, e);
+    };
+
+    const handleMouseEnter = () => {
+        if (!isEnabled) return;
+        updateDrag(cellId);
+    };
+
+    // Handle cell click for normal mode
+    const handleCellClick = () => {
+        if (isEnabled) return; // Don't open edit in multi-select mode
+        setIsEditing(true);
+    };
+
+    // Handle Ctrl+click for quick toggle
+    const handleClick = (e) => {
+        if (isEnabled) {
+            const isCtrlPressed = e.ctrlKey || e.metaKey;
+            if (isCtrlPressed) {
+                toggleCellSelection(cellId, true);
+            }
+        } else {
+            handleCellClick();
+        }
+    };
+
     if (isEditing) {
         return (
             <div className="timetable-cell editing">
@@ -106,24 +139,31 @@ export default function TimeTableCell({ cellId, day, period }) {
         );
     }
 
+    const selected = isSelected(cellId);
+
     return (
         <div 
-            className={`timetable-cell ${isEmpty ? 'empty-cell' : ''} ${hasConflict ? 'conflict-cell' : ''} ${cellData.isOverride ? 'override-cell' : ''}`}
+            ref={cellRef}
+            className={`timetable-cell ${isEmpty ? 'empty-cell' : ''} ${hasConflict ? 'conflict-cell' : ''} ${cellData.isOverride ? 'override-cell' : ''} ${selected ? 'selected-cell' : ''}`}
             data-subject={cellData.subject || ''}
+            onClick={handleClick}
+            onMouseDown={handleMouseDown}
+            onMouseEnter={handleMouseEnter}
         >
             {isEmpty ? (
-                <div className="empty-state" onClick={() => setIsEditing(true)}>
+                <div className="empty-state">
                     <span>Empty</span>
                     <Edit2 size={14} />
                 </div>
             ) : (
-                <div className="assigned-state" onClick={() => setIsEditing(true)}>
+                <div className="assigned-state">
                     <div className="subject-badge" data-subject={cellData.subject}>{cellData.subject}</div>
                     <div className="teacher-name">{currentTeacher?.name || 'Unknown'}</div>
 
                     <div className="cell-status-icons">
                         {hasConflict && <AlertTriangle size={16} className="text-danger" title="Double booked!" />}
                         {cellData.isOverride && <span className="override-badge" title="Manual Override">OVR</span>}
+                        {selected && <span className="selected-badge" title="Selected">✓</span>}
                     </div>
                 </div>
             )}

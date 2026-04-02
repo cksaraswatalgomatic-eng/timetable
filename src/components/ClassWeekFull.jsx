@@ -1,6 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { useMultiSelect } from '../store/MultiSelectContext';
 import TimeTableCell from './TimeTableCell';
-import { ArrowLeft, Download, Printer } from 'lucide-react';
+import BulkEditPanel from './BulkEditPanel';
+import { ArrowLeft, Download, Printer, MousePointer2, CheckSquare } from 'lucide-react';
 import { useToast } from './index';
 import html2pdf from 'html2pdf.js';
 import './ClassWeekFull.css';
@@ -11,6 +13,17 @@ const periods = [1, 2, 3, 4, 5, 6, 7, 8];
 export default function ClassWeekFull({ classData, onBack }) {
     const toast = useToast();
     const printRef = useRef(null);
+    const { isEnabled, selectedCells, endDrag, clearSelection, toggleEnabled, containerRef } = useMultiSelect();
+
+    // Global mouse up to end drag
+    useEffect(() => {
+        const handleMouseUp = () => {
+            endDrag();
+        };
+
+        document.addEventListener('mouseup', handleMouseUp);
+        return () => document.removeEventListener('mouseup', handleMouseUp);
+    }, [endDrag]);
 
     const handleDownloadPDF = () => {
         const element = printRef.current;
@@ -34,14 +47,30 @@ export default function ClassWeekFull({ classData, onBack }) {
     };
 
     return (
-        <div className="class-week-full">
+        <div className="class-week-full" ref={containerRef}>
             {/* Header - Hidden when printing */}
             <div className="class-week-actions no-print">
                 <button className="btn btn-secondary" onClick={onBack}>
                     <ArrowLeft size={20} />
                     Back to Schedule
                 </button>
+                
                 <div className="action-buttons gap-2 flex">
+                    {/* Multi-select toggle */}
+                    <button 
+                        className={`btn btn-sm ${isEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => {
+                            clearSelection();
+                            toggleEnabled();
+                        }}
+                        title="Enable multi-select mode"
+                    >
+                        {isEnabled ? <CheckSquare size={16} /> : <MousePointer2 size={16} />}
+                        <span>
+                            {isEnabled ? `Selecting (${selectedCells.length})` : 'Multi-Select'}
+                        </span>
+                    </button>
+
                     <button className="btn btn-secondary" onClick={handlePrint} title="Print">
                         <Printer size={18} />
                         Print
@@ -52,6 +81,14 @@ export default function ClassWeekFull({ classData, onBack }) {
                     </button>
                 </div>
             </div>
+
+            {/* Info bar when multi-select is enabled */}
+            {isEnabled && (
+                <div className="multi-select-info no-print">
+                    <MousePointer2 size={16} />
+                    <span>Drag to select multiple cells • Ctrl+Click to toggle • {selectedCells.length} selected</span>
+                </div>
+            )}
 
             {/* Printable Content */}
             <div className="class-week-printable" ref={printRef}>
@@ -93,10 +130,10 @@ export default function ClassWeekFull({ classData, onBack }) {
                                     const cellId = `${day}-${p}-${classData.id}`;
                                     return (
                                         <td key={p} className="week-cell-wrapper-print">
-                                            <TimeTableCell 
-                                                cellId={cellId} 
-                                                day={day} 
-                                                period={p} 
+                                            <TimeTableCell
+                                                cellId={cellId}
+                                                day={day}
+                                                period={p}
                                             />
                                         </td>
                                     );
@@ -107,15 +144,18 @@ export default function ClassWeekFull({ classData, onBack }) {
                 </table>
 
                 <div className="print-footer">
-                    <p>Generated on {new Date().toLocaleDateString('en-IN', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
+                    <p>Generated on {new Date().toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
                     })}</p>
                     <p>TimeTable Pro - School Schedule Manager</p>
                 </div>
             </div>
+
+            {/* Bulk Edit Panel */}
+            <BulkEditPanel />
         </div>
     );
 }
