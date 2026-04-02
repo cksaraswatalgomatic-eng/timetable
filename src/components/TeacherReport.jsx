@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTimetableStore } from '../store/useTimetableStore';
-import { CheckCircle2, AlertTriangle, UserX } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, UserX, ArrowRight } from 'lucide-react';
 import './TeacherReport.css';
 
-export default function TeacherReport() {
+export default function TeacherReport({ onTeacherClick }) {
     const { teachers, getTeacherLoad, timetable } = useTimetableStore();
 
     const getLoadStatus = (assigned, max) => {
@@ -51,10 +51,11 @@ export default function TeacherReport() {
                                 key={teacher.id} 
                                 className="teacher-load-card"
                                 data-status={status.status}
+                                onClick={() => onTeacherClick && onTeacherClick(teacher.id)}
                             >
                                 <div className="teacher-info justify-between items-center flex">
                                     <div>
-                                        <h3>{teacher.name}</h3>
+                                        <h3>{teacher.name} <ArrowRight size={16} className="click-arrow" /></h3>
                                         <span className="text-muted">Subjects: {teacher.allowedSubjects.join(', ')}</span>
                                     </div>
                                     <div className={`status-badge bg-${status.color}`}>

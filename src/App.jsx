@@ -3,6 +3,7 @@ import { useTimetableStore } from './store/useTimetableStore';
 import { MultiSelectProvider } from './store/MultiSelectContext';
 import TimeTableGrid from './components/TimeTableGrid';
 import TeacherReport from './components/TeacherReport';
+import TeacherDetail from './components/TeacherDetail';
 import ClassWeekFull from './components/ClassWeekFull';
 import ClassSchedulePDF from './components/ClassSchedulePDF';
 import Settings from './components/Settings';
@@ -19,6 +20,7 @@ function AppContent() {
     return savedTheme === 'dark';
   });
   const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [showPDFModal, setShowPDFModal] = useState(false);
   
   const { clearTimetable, timetable } = useTimetableStore();
@@ -192,10 +194,15 @@ function AppContent() {
         </header>
 
         <div className="content-area">
-          {activeTab === 'timetable' ? (
+          {selectedTeacher ? (
+            <TeacherDetail 
+              teacherId={selectedTeacher} 
+              onBack={() => setSelectedTeacher(null)} 
+            />
+          ) : activeTab === 'timetable' ? (
             <TimeTableGrid onClassClick={setSelectedClass} />
           ) : activeTab === 'teachers' ? (
-            <TeacherReport />
+            <TeacherReport onTeacherClick={setSelectedTeacher} />
           ) : (
             <Settings />
           )}
