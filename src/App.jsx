@@ -4,9 +4,11 @@ import { MultiSelectProvider } from './store/MultiSelectContext';
 import TimeTableGrid from './components/TimeTableGrid';
 import TeacherReport from './components/TeacherReport';
 import ClassWeekFull from './components/ClassWeekFull';
+import ClassSchedulePDF from './components/ClassSchedulePDF';
+import Settings from './components/Settings';
 import { ToastProvider } from './components/ToastProvider';
 import { useToast } from './components';
-import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2 } from 'lucide-react';
+import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2, FileText, Settings as SettingsIcon } from 'lucide-react';
 import './App.css';
 
 function AppContent() {
@@ -17,6 +19,7 @@ function AppContent() {
     return savedTheme === 'dark';
   });
   const [selectedClass, setSelectedClass] = useState(null);
+  const [showPDFModal, setShowPDFModal] = useState(false);
   
   const { clearTimetable, timetable } = useTimetableStore();
   const toast = useToast();
@@ -78,9 +81,9 @@ function AppContent() {
   // If a class is selected for full view, show that
   if (selectedClass) {
     return (
-      <ClassWeekFull 
-        classData={selectedClass} 
-        onBack={() => setSelectedClass(null)} 
+      <ClassWeekFull
+        classData={selectedClass}
+        onBack={() => setSelectedClass(null)}
       />
     );
   }
@@ -88,14 +91,8 @@ function AppContent() {
   return (
     <div className="app-container flex">
       <aside className="sidebar glass-strong">
-        <div className="sidebar-header">
-          <div className="logo-icon">
-            <Calendar size={28} className="text-primary" />
-          </div>
-          <div>
-            <h2>TimeTable Pro</h2>
-            <span className="sidebar-subtitle">School Scheduler</span>
-          </div>
+        <div className="sidebar-header" style={{ padding: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="Sarvhitkari Shiksha Niketan Logo" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
         </div>
 
         <nav className="sidebar-nav flex-col gap-2 mt-6">
@@ -112,6 +109,13 @@ function AppContent() {
           >
             <Users size={20} />
             <span>Teacher Loads</span>
+          </button>
+          <button
+            className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <SettingsIcon size={20} />
+            <span>Settings</span>
           </button>
         </nav>
 
@@ -144,10 +148,25 @@ function AppContent() {
       <main className="main-content">
         <header className="main-header glass">
           <div className="header-left items-center gap-4 flex">
-            <h1>{activeTab === 'timetable' ? 'Class Schedules' : 'Teacher Utilization'}</h1>
+            <h1>
+              {activeTab === 'timetable' ? 'Class Schedules' : 
+               activeTab === 'teachers' ? 'Teacher Utilization' : 'Settings & Configuration'}
+            </h1>
           </div>
-          
+
           <div className="header-right items-center gap-2 flex">
+            {/* PDF Download */}
+            {activeTab === 'timetable' && (
+              <button 
+                className="btn btn-secondary btn-sm" 
+                onClick={() => setShowPDFModal(true)}
+                title="Download class timetables as PDF"
+              >
+                <FileText size={16} />
+                <span className="hidden-mobile">Download PDF</span>
+              </button>
+            )}
+            
             {/* Import/Export */}
             <label className="btn btn-secondary btn-sm" title="Import data">
               <Upload size={16} />
@@ -158,12 +177,12 @@ function AppContent() {
               <Download size={16} />
               <span className="hidden-mobile">Export</span>
             </button>
-            
+
             {/* Theme Toggle */}
             <button className="btn btn-secondary btn-sm theme-toggle" onClick={toggleTheme} title="Toggle theme">
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            
+
             {/* Clear Timetable */}
             <button className="btn btn-danger btn-sm" onClick={handleClearTimetable} title="Reset timetable">
               <Trash2 size={16} />
@@ -175,10 +194,17 @@ function AppContent() {
         <div className="content-area">
           {activeTab === 'timetable' ? (
             <TimeTableGrid onClassClick={setSelectedClass} />
-          ) : (
+          ) : activeTab === 'teachers' ? (
             <TeacherReport />
+          ) : (
+            <Settings />
           )}
         </div>
+
+        {/* PDF Download Modal - Only show on timetable tab */}
+        {showPDFModal && activeTab === 'timetable' && (
+          <ClassSchedulePDF onClose={() => setShowPDFModal(false)} />
+        )}
       </main>
     </div>
   );

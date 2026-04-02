@@ -54,10 +54,10 @@ export default function ClassWeekFull({ classData, onBack }) {
                     <ArrowLeft size={20} />
                     Back to Schedule
                 </button>
-                
+
                 <div className="action-buttons gap-2 flex">
                     {/* Multi-select toggle */}
-                    <button 
+                    <button
                         className={`btn btn-sm ${isEnabled ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => {
                             clearSelection();
@@ -94,13 +94,7 @@ export default function ClassWeekFull({ classData, onBack }) {
             <div className="class-week-printable" ref={printRef}>
                 <div className="class-week-print-header">
                     <div className="print-logo">
-                        <div className="logo-square">
-                            <span>📅</span>
-                        </div>
-                        <div>
-                            <h1>TimeTable Pro</h1>
-                            <p>School Schedule Manager</p>
-                        </div>
+                        <img src="/logo.png" alt="Sarvhitkari Shiksha Niketan Logo" style={{ maxHeight: '60px', objectFit: 'contain' }} />
                     </div>
                     <div className="print-class-info">
                         <h2>{classData.name} - Weekly Timetable</h2>
