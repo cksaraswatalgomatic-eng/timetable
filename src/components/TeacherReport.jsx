@@ -4,7 +4,9 @@ import { CheckCircle2, AlertTriangle, UserX, ArrowRight } from 'lucide-react';
 import './TeacherReport.css';
 
 export default function TeacherReport({ onTeacherClick }) {
-    const { teachers, getTeacherLoad, timetable } = useTimetableStore();
+    const { teachers, getTeacherLoad, timetable, activeSegment } = useTimetableStore();
+
+    const filteredTeachers = teachers.filter(t => (t.category || 'secondary') === activeSegment);
 
     const getLoadStatus = (assigned, max) => {
         const ratio = assigned / max;
@@ -14,41 +16,44 @@ export default function TeacherReport({ onTeacherClick }) {
         return { label: 'Optimum', color: 'success', status: 'optimum', icon: <CheckCircle2 size={16} /> };
     };
 
-    // Find empty periods across the whole school (missing teachers)
-    const emptyPeriods = Object.values(timetable).filter(c => !c.teacherId).length;
-    const totalPeriods = Object.values(timetable).length;
+    // Find empty periods across the active segment
+    const segmentClasses = useTimetableStore.getState().classes.filter(c => (c.category || 'secondary') === activeSegment).map(c => c.id);
+    const segmentTimetable = Object.values(timetable).filter(c => segmentClasses.includes(c.classId));
+
+    const emptyPeriods = segmentTimetable.filter(c => !c.teacherId).length;
+    const totalPeriods = segmentTimetable.length;
     const fillRate = totalPeriods ? ((totalPeriods - emptyPeriods) / totalPeriods * 100).toFixed(1) : 0;
 
     return (
         <div className="teacher-report flex-col gap-4">
             <div className="summary-cards">
                 <div className="summary-card">
-                    <h3 className="text-muted">Total Teachers</h3>
-                    <div className="summary-val">{teachers.length}</div>
+                    <h3 className="text-muted">Total {activeSegment === 'primary' ? 'Primary' : 'Secondary'} Teachers</h3>
+                    <div className="summary-val">{filteredTeachers.length}</div>
                 </div>
                 <div className="summary-card">
                     <h3 className="text-muted">Empty Slot Alerts</h3>
                     <div className={`summary-val ${emptyPeriods > 0 ? 'text-danger' : 'text-success'}`}>{emptyPeriods}</div>
                 </div>
                 <div className="summary-card">
-                    <h3 className="text-muted">School Fill Rate</h3>
+                    <h3 className="text-muted">Segment Fill Rate</h3>
                     <div className="summary-val">{fillRate}%</div>
                 </div>
             </div>
 
             <div className="glass p-6">
-                <h2>Teacher Utilization Dashboard</h2>
-                <p className="text-muted mb-4">Review and optimize teacher loading. Colors indicate optimum utilization or risks.</p>
+                <h2>{activeSegment === 'primary' ? 'Primary' : 'Secondary'} Teacher Utilization Dashboard</h2>
+                <p className="text-muted mb-4">Review and optimize {activeSegment} teacher loading.</p>
 
                 <div className="teacher-list">
-                    {teachers.map(teacher => {
+                    {filteredTeachers.map(teacher => {
                         const assigned = getTeacherLoad(teacher.id);
                         const status = getLoadStatus(assigned, teacher.maxPeriods);
                         const percent = Math.min((assigned / teacher.maxPeriods) * 100, 100);
 
                         return (
-                            <div 
-                                key={teacher.id} 
+                            <div
+                                key={teacher.id}
                                 className="teacher-load-card"
                                 data-status={status.status}
                                 onClick={() => onTeacherClick && onTeacherClick(teacher.id)}

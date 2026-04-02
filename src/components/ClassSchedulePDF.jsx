@@ -6,10 +6,12 @@ import html2pdf from 'html2pdf.js';
 import './ClassSchedulePDF.css';
 
 export default function ClassSchedulePDF({ onClose }) {
-    const { classes, timetable } = useTimetableStore();
+    const { classes, activeSegment, timetable } = useTimetableStore();
     const toast = useToast();
     const [selectedClasses, setSelectedClasses] = React.useState([]);
     const [isDownloading, setIsDownloading] = React.useState(false);
+
+    const filteredClasses = classes.filter(c => c.category === activeSegment);
 
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const periods = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -23,7 +25,7 @@ export default function ClassSchedulePDF({ onClose }) {
     };
 
     const selectAll = () => {
-        setSelectedClasses(classes.map(c => c.id));
+        setSelectedClasses(filteredClasses.map(c => c.id));
     };
 
     const deselectAll = () => {
@@ -50,16 +52,16 @@ export default function ClassSchedulePDF({ onClose }) {
                         <tr>
                             <td class="day-cell"><strong>${day}</strong></td>
                             ${periods.map(p => {
-                                const cellId = `${day}-${p}-${classData.id}`;
-                                const cell = timetable[cellId];
-                                const content = cell?.teacherId 
-                                    ? `<div class="cell-content">
+            const cellId = `${day}-${p}-${classData.id}`;
+            const cell = timetable[cellId];
+            const content = cell?.teacherId
+                ? `<div class="cell-content">
                                         <span class="subject">${cell.subject || ''}</span>
                                         <span class="teacher">${cell.teacherId ? 'Teacher Assigned' : ''}</span>
                                        </div>`
-                                    : '<span class="empty">Empty</span>';
-                                return `<td class="pdf-cell">${content}</td>`;
-                            }).join('')}
+                : '<span class="empty">Empty</span>';
+            return `<td class="pdf-cell">${content}</td>`;
+        }).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -71,7 +73,7 @@ export default function ClassSchedulePDF({ onClose }) {
         `;
 
         document.body.appendChild(element);
-        
+
         const opt = {
             margin: [10, 10, 10, 10],
             filename: `${classData.name}_Timetable.pdf`,
@@ -97,7 +99,7 @@ export default function ClassSchedulePDF({ onClose }) {
         }
 
         setIsDownloading(true);
-        const classesToDownload = classes.filter(c => selectedClasses.includes(c.id));
+        const classesToDownload = filteredClasses.filter(c => selectedClasses.includes(c.id));
 
         for (const classData of classesToDownload) {
             await downloadSinglePDF(classData);
@@ -133,9 +135,9 @@ export default function ClassSchedulePDF({ onClose }) {
                     </div>
 
                     <div className="class-selection-grid">
-                        {classes.map(cls => (
-                            <label 
-                                key={cls.id} 
+                        {filteredClasses.map(cls => (
+                            <label
+                                key={cls.id}
                                 className={`class-checkbox-card ${selectedClasses.includes(cls.id) ? 'selected' : ''}`}
                             >
                                 <input
@@ -145,7 +147,7 @@ export default function ClassSchedulePDF({ onClose }) {
                                 />
                                 <div className="checkbox-card-content">
                                     <span className="class-name">{cls.name}</span>
-                                    <button 
+                                    <button
                                         className="btn btn-sm btn-primary"
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -163,10 +165,10 @@ export default function ClassSchedulePDF({ onClose }) {
                     <div className="pdf-modal-footer">
                         <div className="selection-info">
                             <Files size={16} />
-                            <span>{selectedClasses.length} of {classes.length} classes selected</span>
+                            <span>{selectedClasses.length} of {filteredClasses.length} classes selected</span>
                         </div>
-                        <button 
-                            className="btn btn-primary" 
+                        <button
+                            className="btn btn-primary"
                             onClick={downloadAllPDFs}
                             disabled={selectedClasses.length === 0 || isDownloading}
                         >

@@ -22,9 +22,17 @@ function AppContent() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [showPDFModal, setShowPDFModal] = useState(false);
-  
-  const { clearTimetable, timetable } = useTimetableStore();
+
+  const { clearTimetable, timetable, classes, assignCell, migratePrimaryData } = useTimetableStore();
   const toast = useToast();
+
+  React.useEffect(() => {
+    // Seamless hydration patch: Automatically inject missing primary class grid blocks
+    // if the user has a pre-existing saved state without wiping their secondary data!
+    if (migratePrimaryData) {
+      migratePrimaryData();
+    }
+  }, [migratePrimaryData]);
 
   const toggleTheme = () => {
     const newTheme = isDark ? 'light' : 'dark';
@@ -151,16 +159,16 @@ function AppContent() {
         <header className="main-header glass">
           <div className="header-left items-center gap-4 flex">
             <h1>
-              {activeTab === 'timetable' ? 'Class Schedules' : 
-               activeTab === 'teachers' ? 'Teacher Utilization' : 'Settings & Configuration'}
+              {activeTab === 'timetable' ? 'Class Schedules' :
+                activeTab === 'teachers' ? 'Teacher Utilization' : 'Settings & Configuration'}
             </h1>
           </div>
 
           <div className="header-right items-center gap-2 flex">
             {/* PDF Download */}
             {activeTab === 'timetable' && (
-              <button 
-                className="btn btn-secondary btn-sm" 
+              <button
+                className="btn btn-secondary btn-sm"
                 onClick={() => setShowPDFModal(true)}
                 title="Download class timetables as PDF"
               >
@@ -168,7 +176,7 @@ function AppContent() {
                 <span className="hidden-mobile">Download PDF</span>
               </button>
             )}
-            
+
             {/* Import/Export */}
             <label className="btn btn-secondary btn-sm" title="Import data">
               <Upload size={16} />
@@ -195,9 +203,9 @@ function AppContent() {
 
         <div className="content-area">
           {selectedTeacher ? (
-            <TeacherDetail 
-              teacherId={selectedTeacher} 
-              onBack={() => setSelectedTeacher(null)} 
+            <TeacherDetail
+              teacherId={selectedTeacher}
+              onBack={() => setSelectedTeacher(null)}
             />
           ) : activeTab === 'timetable' ? (
             <TimeTableGrid onClassClick={setSelectedClass} />
