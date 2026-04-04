@@ -7,9 +7,10 @@ import TeacherDetail from './components/TeacherDetail';
 import ClassWeekFull from './components/ClassWeekFull';
 import ClassSchedulePDF from './components/ClassSchedulePDF';
 import Settings from './components/Settings';
+import SubjectRequirements from './components/SubjectRequirements';
 import { ToastProvider } from './components/ToastProvider';
 import { useToast } from './components';
-import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2, FileText, Settings as SettingsIcon, Target } from 'lucide-react';
 import './App.css';
 
 function AppContent() {
@@ -23,7 +24,7 @@ function AppContent() {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [showPDFModal, setShowPDFModal] = useState(false);
 
-  const { clearTimetable, timetable, classes, assignCell, migratePrimaryData } = useTimetableStore();
+  const { clearTimetable, timetable, migratePrimaryData } = useTimetableStore();
   const toast = useToast();
 
   React.useEffect(() => {
@@ -121,6 +122,13 @@ function AppContent() {
             <span>Teacher Loads</span>
           </button>
           <button
+            className={`nav-btn ${activeTab === 'requirements' ? 'active' : ''}`}
+            onClick={() => setActiveTab('requirements')}
+          >
+            <Target size={20} />
+            <span>Subject Requirements</span>
+          </button>
+          <button
             className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
@@ -160,7 +168,8 @@ function AppContent() {
           <div className="header-left items-center gap-4 flex">
             <h1>
               {activeTab === 'timetable' ? 'Class Schedules' :
-                activeTab === 'teachers' ? 'Teacher Utilization' : 'Settings & Configuration'}
+                activeTab === 'teachers' ? 'Teacher Utilization' :
+                  activeTab === 'requirements' ? 'Subject Requirements' : 'Settings & Configuration'}
             </h1>
           </div>
 
@@ -203,14 +212,16 @@ function AppContent() {
 
         <div className="content-area">
           {selectedTeacher ? (
-            <TeacherDetail
-              teacherId={selectedTeacher}
-              onBack={() => setSelectedTeacher(null)}
+            <TeacherDetail 
+              teacherId={selectedTeacher} 
+              onBack={() => setSelectedTeacher(null)} 
             />
           ) : activeTab === 'timetable' ? (
             <TimeTableGrid onClassClick={setSelectedClass} />
           ) : activeTab === 'teachers' ? (
             <TeacherReport onTeacherClick={setSelectedTeacher} />
+          ) : activeTab === 'requirements' ? (
+            <SubjectRequirements />
           ) : (
             <Settings />
           )}

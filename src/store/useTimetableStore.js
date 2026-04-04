@@ -130,6 +130,8 @@ export const useTimetableStore = create(
       classes: initialClasses,
       timetable: generateEmptyGrid(),
       activeSegment: 'secondary',
+      // Subject period requirements: { classId: { subject: minPeriodsPerWeek } }
+      subjectRequirements: {},
       setActiveSegment: (segment) => set({ activeSegment: segment }),
 
       assignCell: (cellId, teacherId, subject) => set((state) => {
@@ -224,7 +226,41 @@ export const useTimetableStore = create(
       removeTeacher: (id) => set((state) => ({ teachers: state.teachers.filter(t => t.id !== id) })),
 
       addClass: (cls) => set((state) => ({ classes: [...state.classes, { ...cls, id: 'c' + Date.now() }] })),
-      removeClass: (id) => set((state) => ({ classes: state.classes.filter(c => c.id !== id) }))
+      removeClass: (id) => set((state) => ({ classes: state.classes.filter(c => c.id !== id) })),
+
+      // Subject requirements management
+      setSubjectRequirement: (classId, subject, minPeriods) => set((state) => {
+        const newReqs = { ...state.subjectRequirements };
+        if (!newReqs[classId]) {
+          newReqs[classId] = {};
+        }
+        if (minPeriods <= 0) {
+          delete newReqs[classId][subject];
+          if (Object.keys(newReqs[classId]).length === 0) {
+            delete newReqs[classId];
+          }
+        } else {
+          newReqs[classId][subject] = minPeriods;
+        }
+        return { subjectRequirements: newReqs };
+      }),
+
+      getSubjectRequirement: (classId, subject) => {
+        const { subjectRequirements } = get();
+        return subjectRequirements[classId]?.[subject] || 0;
+      },
+
+      getClassRequirements: (classId) => {
+        const { subjectRequirements } = get();
+        return subjectRequirements[classId] || {};
+      },
+
+      getSubjectActualPeriods: (classId, subject) => {
+        const { timetable } = get();
+        return Object.values(timetable).filter(
+          cell => cell.classId === classId && cell.subject === subject
+        ).length;
+      }
     }),
     {
       name: 'timetable-storage', // localstorage key

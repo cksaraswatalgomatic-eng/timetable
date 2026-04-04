@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useTimetableStore } from '../store/useTimetableStore';
-import { Plus, Edit2, Trash2, Save, X, Users, BookOpen, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Users, BookOpen, Clock, Target, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import './Settings.css';
 
+// Import store for accessing timetable state
+import { useTimetableStore as store } from '../store/useTimetableStore';
+
 export default function Settings() {
-    const { teachers, classes, addTeacher, removeTeacher, addClass, removeClass } = useTimetableStore();
+    const { teachers, classes, addTeacher, removeTeacher, addClass, removeClass, 
+            setSubjectRequirement, getClassRequirements, getSubjectActualPeriods } = useTimetableStore();
     const [activeTab, setActiveTab] = useState('teachers');
     const [editingTeacher, setEditingTeacher] = useState(null);
     const [editingClass, setEditingClass] = useState(null);
+    const [selectedClassForReqs] = useState(classes[0]?.id || ''); // eslint-disable-line no-unused-vars
+    const [selectedSegment, setSelectedSegment] = useState('secondary');
     
     // Teacher form state
     const [teacherForm, setTeacherForm] = useState({
@@ -28,7 +34,8 @@ export default function Settings() {
         addTeacher({
             name: teacherForm.name,
             allowedSubjects: teacherForm.allowedSubjects,
-            maxPeriods: parseInt(teacherForm.maxPeriods) || 36
+            maxPeriods: parseInt(teacherForm.maxPeriods) || 36,
+            category: teacherForm.category || selectedSegment
         });
         resetTeacherForm();
     };
@@ -41,7 +48,8 @@ export default function Settings() {
             id: editingTeacher.id,
             name: teacherForm.name,
             allowedSubjects: teacherForm.allowedSubjects,
-            maxPeriods: parseInt(teacherForm.maxPeriods) || 36
+            maxPeriods: parseInt(teacherForm.maxPeriods) || 36,
+            category: teacherForm.category || selectedSegment
         });
         resetTeacherForm();
     };
@@ -108,6 +116,21 @@ export default function Settings() {
             </div>
 
             <div className="settings-tabs glass">
+                <div className="segment-tabs">
+                    <button 
+                        className={`segment-tab-settings ${selectedSegment === 'primary' ? 'active' : ''}`}
+                        onClick={() => setSelectedSegment('primary')}
+                    >
+                        Primary (Nursery - 5th)
+                    </button>
+                    <button 
+                        className={`segment-tab-settings ${selectedSegment === 'secondary' ? 'active' : ''}`}
+                        onClick={() => setSelectedSegment('secondary')}
+                    >
+                        Secondary (6th - 10th)
+                    </button>
+                </div>
+                
                 <button 
                     className={`tab-btn ${activeTab === 'teachers' ? 'active' : ''}`}
                     onClick={() => setActiveTab('teachers')}
@@ -121,6 +144,13 @@ export default function Settings() {
                 >
                     <BookOpen size={20} />
                     Classes
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === 'requirements' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('requirements')}
+                >
+                    <Target size={20} />
+                    Subject Requirements
                 </button>
             </div>
 
@@ -152,6 +182,18 @@ export default function Settings() {
                                         placeholder="e.g., Kamal Sharma"
                                         className="input-field"
                                     />
+                                </div>
+
+                                <div className="form-field">
+                                    <label>Segment</label>
+                                    <select
+                                        value={teacherForm.category || selectedSegment}
+                                        onChange={(e) => setTeacherForm(prev => ({ ...prev, category: e.target.value }))}
+                                        className="input-field"
+                                    >
+                                        <option value="primary">Primary</option>
+                                        <option value="secondary">Secondary</option>
+                                    </select>
                                 </div>
 
                                 <div className="form-field">
@@ -217,15 +259,15 @@ export default function Settings() {
                             </div>
                         </div>
 
-                        {/* Teachers List */}
+                        {/* Teachers List - Filtered by Segment */}
                         <div className="teachers-list">
                             <h2 className="section-title">
                                 <Users size={20} />
-                                All Teachers ({teachers.length})
+                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Teachers ({teachers.filter(t => t.category === selectedSegment).length})
                             </h2>
                             
                             <div className="teachers-grid">
-                                {teachers.map(teacher => (
+                                {teachers.filter(t => t.category === selectedSegment).map(teacher => (
                                     <div key={teacher.id} className="teacher-card glass">
                                         <div className="teacher-card-header">
                                             <div className="teacher-info">
@@ -233,6 +275,7 @@ export default function Settings() {
                                                 <div className="teacher-meta">
                                                     <Clock size={14} />
                                                     <span>Max {teacher.maxPeriods} periods/week</span>
+                                                    <span className="teacher-category-badge">{teacher.category}</span>
                                                 </div>
                                             </div>
                                             <div className="teacher-actions">
@@ -260,6 +303,140 @@ export default function Settings() {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'requirements' && (
+                    <div className="settings-section">
+                        {/* Subject-wise Requirements View */}
+                        <div className="form-card glass">
+                            <div className="form-header">
+                                <h2>
+                                    <Target size={20} />
+                                    Subject-wise Period Requirements per Class
+                                </h2>
+                            </div>
+
+                            <p className="help-text">
+                                Configure minimum periods per week for each subject across all classes. 
+                                This ensures government mandates are met for curriculum distribution.
+                            </p>
+                        </div>
+
+                        {/* Subject-wise Table */}
+                        <div className="subject-wise-card glass">
+                            {(() => {
+                                // Filter classes by selected segment (with fallback for missing category)
+                                const segmentClasses = classes.filter(c => {
+                                    if (!c.category) return selectedSegment === 'secondary'; // Default old data to secondary
+                                    return c.category === selectedSegment;
+                                });
+                                
+                                // Get all unique subjects from timetable and requirements for this segment
+                                const allSubjects = new Set();
+                                const timetableState = store.getState().timetable;
+                                
+                                segmentClasses.forEach(cls => {
+                                    const reqs = getClassRequirements(cls.id);
+                                    Object.keys(reqs).forEach(s => allSubjects.add(s));
+                                    
+                                    Object.values(timetableState)
+                                        .filter(cell => cell.classId === cls.id && cell.subject)
+                                        .forEach(cell => allSubjects.add(cell.subject));
+                                });
+
+                                const subjects = Array.from(allSubjects).sort();
+
+                                return (
+                                    <>
+                                        <h3 className="subject-wise-title">
+                                            {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} - Required Periods per Week by Subject
+                                        </h3>
+                                        
+                                        {subjects.length === 0 ? (
+                                            <div className="no-subjects-message">
+                                                <Target size={48} />
+                                                <p>No subjects found for {selectedSegment} classes</p>
+                                                <p className="help-text">Subjects will appear once you assign them in the timetable or set requirements</p>
+                                            </div>
+                                        ) : (
+                                            <div className="subject-wise-table-wrapper">
+                                                <table className="subject-wise-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="subject-name-header">Subject</th>
+                                                            {segmentClasses.map(cls => (
+                                                                <th key={cls.id} className="class-name-header">
+                                                                    {cls.name}
+                                                                </th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {subjects.map(subject => (
+                                                            <tr key={subject}>
+                                                                <td className="subject-label-cell">
+                                                                    <span className="subject-label">{subject}</span>
+                                                                </td>
+                                                                {segmentClasses.map(cls => {
+                                                                    const required = getClassRequirements(cls.id)[subject] || 0;
+                                                                    const actual = getSubjectActualPeriods(cls.id, subject);
+                                                                    const isMet = required === 0 || actual >= required;
+                                                                    const hasRequirement = required > 0;
+                                                                    
+                                                                    return (
+                                                                        <td 
+                                                                            key={cls.id} 
+                                                                            className={`requirement-cell 
+                                                                                ${!hasRequirement ? 'no-requirement' : ''} 
+                                                                                ${hasRequirement && !isMet ? 'has-deficit' : ''} 
+                                                                                ${hasRequirement && isMet ? 'requirement-met' : ''}`}
+                                                                        >
+                                                                            <div className="requirement-input-group">
+                                                                                <label>Required:</label>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    value={required || ''}
+                                                                                    onChange={(e) => setSubjectRequirement(
+                                                                                        cls.id, 
+                                                                                        subject, 
+                                                                                        parseInt(e.target.value) || 0
+                                                                                    )}
+                                                                                    min="0"
+                                                                                    max="40"
+                                                                                    className="period-input"
+                                                                                    placeholder="0"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="actual-display">
+                                                                                <span className={`actual-count ${hasRequirement && !isMet ? 'is-deficit' : ''}`}>
+                                                                                    {actual}
+                                                                                </span>
+                                                                                <span className="actual-label">actual</span>
+                                                                            </div>
+                                                                            {hasRequirement && !isMet && (
+                                                                                <div className="deficit-indicator">
+                                                                                    -{required - actual}
+                                                                                </div>
+                                                                            )}
+                                                                            {hasRequirement && isMet && (
+                                                                                <div className="met-indicator">
+                                                                                    ✓
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
+                                                                    );
+                                                                })}
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
                 )}
@@ -296,6 +473,17 @@ export default function Settings() {
                                         onKeyPress={(e) => e.key === 'Enter' && (editingClass ? handleUpdateClass() : handleAddClass())}
                                     />
                                 </div>
+                                <div className="form-field">
+                                    <label>Segment</label>
+                                    <select
+                                        value={classForm.category || selectedSegment}
+                                        onChange={(e) => setClassForm(prev => ({ ...prev, category: e.target.value }))}
+                                        className="input-field"
+                                    >
+                                        <option value="primary">Primary</option>
+                                        <option value="secondary">Secondary</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="form-actions">
@@ -313,19 +501,20 @@ export default function Settings() {
                             </div>
                         </div>
 
-                        {/* Classes List */}
+                        {/* Classes List - Filtered by Segment */}
                         <div className="classes-list">
                             <h2 className="section-title">
                                 <BookOpen size={20} />
-                                All Classes ({classes.length})
+                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Classes ({classes.filter(c => c.category === selectedSegment).length})
                             </h2>
                             
                             <div className="classes-grid">
-                                {classes.map(cls => (
+                                {classes.filter(c => c.category === selectedSegment).map(cls => (
                                     <div key={cls.id} className="class-card glass">
                                         <div className="class-card-header">
                                             <div className="class-info">
                                                 <h3>{cls.name}</h3>
+                                                <span className="class-category">{cls.category}</span>
                                             </div>
                                             <div className="class-actions">
                                                 <button 
