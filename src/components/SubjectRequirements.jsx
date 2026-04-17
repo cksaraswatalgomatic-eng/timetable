@@ -8,14 +8,14 @@ export default function SubjectRequirements() {
     const { classes, setSubjectRequirement, getClassRequirements, getSubjectActualPeriods } = useTimetableStore();
     const [selectedSegment, setSelectedSegment] = useState('secondary');
 
-    const segmentClasses = classes.filter(c => c.category === selectedSegment);
-    
+    const segmentClasses = classes.filter(c => (c.category || 'secondary') === selectedSegment);
+
     // Collect all subjects
     const allSubjects = new Set();
     segmentClasses.forEach(cls => {
         const reqs = getClassRequirements(cls.id);
         Object.keys(reqs).forEach(s => allSubjects.add(s));
-        
+
         Object.values(store.getState().timetable)
             .filter(cell => cell.classId === cls.id && cell.subject)
             .forEach(cell => allSubjects.add(cell.subject));
@@ -39,14 +39,14 @@ export default function SubjectRequirements() {
 
             {/* Segment Selector */}
             <div className="segment-selector-bar glass">
-                <button 
+                <button
                     className={`segment-tab ${selectedSegment === 'primary' ? 'active' : ''}`}
                     onClick={() => setSelectedSegment('primary')}
                 >
                     <span className="segment-label">Primary</span>
                     <span className="segment-range">Nursery - 5th</span>
                 </button>
-                <button 
+                <button
                     className={`segment-tab ${selectedSegment === 'secondary' ? 'active' : ''}`}
                     onClick={() => setSelectedSegment('secondary')}
                 >
@@ -100,10 +100,10 @@ export default function SubjectRequirements() {
                                         const actual = getSubjectActualPeriods(cls.id, subject);
                                         const isMet = required === 0 || actual >= required;
                                         const hasRequirement = required > 0;
-                                        
+
                                         return (
-                                            <td 
-                                                key={cls.id} 
+                                            <td
+                                                key={cls.id}
                                                 className={`matrix-cell 
                                                     ${!hasRequirement ? 'state-no-req' : ''} 
                                                     ${hasRequirement && !isMet ? 'state-deficit' : ''} 
@@ -116,8 +116,8 @@ export default function SubjectRequirements() {
                                                             type="number"
                                                             value={required || ''}
                                                             onChange={(e) => setSubjectRequirement(
-                                                                cls.id, 
-                                                                subject, 
+                                                                cls.id,
+                                                                subject,
                                                                 parseInt(e.target.value) || 0
                                                             )}
                                                             min="0"

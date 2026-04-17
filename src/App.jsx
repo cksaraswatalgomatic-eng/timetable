@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTimetableStore } from './store/useTimetableStore';
 import { MultiSelectProvider } from './store/MultiSelectContext';
+import { useAuthStore } from './store/useAuthStore';
 import TimeTableGrid from './components/TimeTableGrid';
 import TeacherReport from './components/TeacherReport';
 import TeacherDetail from './components/TeacherDetail';
@@ -8,9 +9,11 @@ import ClassWeekFull from './components/ClassWeekFull';
 import ClassSchedulePDF from './components/ClassSchedulePDF';
 import Settings from './components/Settings';
 import SubjectRequirements from './components/SubjectRequirements';
+import LoginPage from './components/LoginPage';
+import PasswordChange from './components/PasswordChange';
 import { ToastProvider } from './components/ToastProvider';
 import { useToast } from './components';
-import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2, FileText, Settings as SettingsIcon, Target } from 'lucide-react';
+import { Calendar, Users, LayoutDashboard, Sun, Moon, Download, Upload, Trash2, FileText, Settings as SettingsIcon, Target, LogOut, User as UserIcon, Key } from 'lucide-react';
 import './App.css';
 
 function AppContent() {
@@ -23,9 +26,16 @@ function AppContent() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [showPDFModal, setShowPDFModal] = useState(false);
-
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  
   const { clearTimetable, timetable, migratePrimaryData } = useTimetableStore();
+  const { isAuthenticated, currentUser, logout, init: initAuth } = useAuthStore();
   const toast = useToast();
+
+  // Initialize auth on mount
+  React.useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
   React.useEffect(() => {
     // Seamless hydration patch: Automatically inject missing primary class grid blocks
@@ -34,6 +44,16 @@ function AppContent() {
       migratePrimaryData();
     }
   }, [migratePrimaryData]);
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+  };
 
   const toggleTheme = () => {
     const newTheme = isDark ? 'light' : 'dark';
@@ -159,7 +179,21 @@ function AppContent() {
         </div>
 
         <div className="sidebar-footer mt-auto">
-          <p className="text-xs text-muted">Data persists locally automatically.</p>
+          <div className="user-info-section">
+            <div className="user-avatar">
+              <UserIcon size={20} />
+            </div>
+            <div className="user-details">
+              <p className="user-name">{currentUser?.name || currentUser?.username}</p>
+              <p className="user-role">{currentUser?.role}</p>
+            </div>
+            <button className="logout-btn" onClick={() => setShowPasswordChange(true)} title="Change password">
+              <Key size={18} />
+            </button>
+            <button className="logout-btn" onClick={handleLogout} title="Logout">
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -222,14 +256,19 @@ function AppContent() {
             <TeacherReport onTeacherClick={setSelectedTeacher} />
           ) : activeTab === 'requirements' ? (
             <SubjectRequirements />
-          ) : (
+          ) : activeTab === 'settings' ? (
             <Settings />
-          )}
+          ) : null}
         </div>
 
         {/* PDF Download Modal - Only show on timetable tab */}
         {showPDFModal && activeTab === 'timetable' && (
           <ClassSchedulePDF onClose={() => setShowPDFModal(false)} />
+        )}
+
+        {/* Password Change Modal */}
+        {showPasswordChange && (
+          <PasswordChange onClose={() => setShowPasswordChange(false)} />
         )}
       </main>
     </div>

@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { useTimetableStore } from '../store/useTimetableStore';
-import { Plus, Edit2, Trash2, Save, X, Users, BookOpen, Clock, Target, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
+import UserManagement from './UserManagement';
+import { Plus, Edit2, Trash2, Save, X, Users, BookOpen, Clock, Target, AlertTriangle, CheckCircle2, UserPlus } from 'lucide-react';
 import './Settings.css';
 
 // Import store for accessing timetable state
 import { useTimetableStore as store } from '../store/useTimetableStore';
 
 export default function Settings() {
-    const { teachers, classes, addTeacher, removeTeacher, addClass, removeClass, 
-            setSubjectRequirement, getClassRequirements, getSubjectActualPeriods } = useTimetableStore();
+    const { teachers, classes, addTeacher, removeTeacher, addClass, removeClass,
+        setSubjectRequirement, getClassRequirements, getSubjectActualPeriods } = useTimetableStore();
+    const { currentUser } = useAuthStore();
     const [activeTab, setActiveTab] = useState('teachers');
     const [editingTeacher, setEditingTeacher] = useState(null);
     const [editingClass, setEditingClass] = useState(null);
     const [selectedClassForReqs] = useState(classes[0]?.id || ''); // eslint-disable-line no-unused-vars
     const [selectedSegment, setSelectedSegment] = useState('secondary');
     
+    const isAdmin = currentUser?.role === 'admin';
+
     // Teacher form state
     const [teacherForm, setTeacherForm] = useState({
         name: '',
@@ -117,41 +122,50 @@ export default function Settings() {
 
             <div className="settings-tabs glass">
                 <div className="segment-tabs">
-                    <button 
+                    <button
                         className={`segment-tab-settings ${selectedSegment === 'primary' ? 'active' : ''}`}
                         onClick={() => setSelectedSegment('primary')}
                     >
                         Primary (Nursery - 5th)
                     </button>
-                    <button 
+                    <button
                         className={`segment-tab-settings ${selectedSegment === 'secondary' ? 'active' : ''}`}
                         onClick={() => setSelectedSegment('secondary')}
                     >
                         Secondary (6th - 10th)
                     </button>
                 </div>
-                
-                <button 
+
+                <button
                     className={`tab-btn ${activeTab === 'teachers' ? 'active' : ''}`}
                     onClick={() => setActiveTab('teachers')}
                 >
                     <Users size={20} />
                     Teachers
                 </button>
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'classes' ? 'active' : ''}`}
                     onClick={() => setActiveTab('classes')}
                 >
                     <BookOpen size={20} />
                     Classes
                 </button>
-                <button 
+                <button
                     className={`tab-btn ${activeTab === 'requirements' ? 'active' : ''}`}
                     onClick={() => setActiveTab('requirements')}
                 >
                     <Target size={20} />
                     Subject Requirements
                 </button>
+                {isAdmin && (
+                    <button
+                        className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('users')}
+                    >
+                        <UserPlus size={20} />
+                        Users
+                    </button>
+                )}
             </div>
 
             <div className="settings-content">
@@ -263,11 +277,11 @@ export default function Settings() {
                         <div className="teachers-list">
                             <h2 className="section-title">
                                 <Users size={20} />
-                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Teachers ({teachers.filter(t => t.category === selectedSegment).length})
+                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Teachers ({teachers.filter(t => (t.category || 'secondary') === selectedSegment).length})
                             </h2>
-                            
+
                             <div className="teachers-grid">
-                                {teachers.filter(t => t.category === selectedSegment).map(teacher => (
+                                {teachers.filter(t => (t.category || 'secondary') === selectedSegment).map(teacher => (
                                     <div key={teacher.id} className="teacher-card glass">
                                         <div className="teacher-card-header">
                                             <div className="teacher-info">
@@ -275,17 +289,17 @@ export default function Settings() {
                                                 <div className="teacher-meta">
                                                     <Clock size={14} />
                                                     <span>Max {teacher.maxPeriods} periods/week</span>
-                                                    <span className="teacher-category-badge">{teacher.category}</span>
+                                                    <span className="teacher-category-badge">{teacher.category || 'secondary'}</span>
                                                 </div>
                                             </div>
                                             <div className="teacher-actions">
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-secondary"
                                                     onClick={() => handleEditTeacher(teacher)}
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-danger"
                                                     onClick={() => removeTeacher(teacher.id)}
                                                 >
@@ -319,7 +333,7 @@ export default function Settings() {
                             </div>
 
                             <p className="help-text">
-                                Configure minimum periods per week for each subject across all classes. 
+                                Configure minimum periods per week for each subject across all classes.
                                 This ensures government mandates are met for curriculum distribution.
                             </p>
                         </div>
@@ -332,15 +346,15 @@ export default function Settings() {
                                     if (!c.category) return selectedSegment === 'secondary'; // Default old data to secondary
                                     return c.category === selectedSegment;
                                 });
-                                
+
                                 // Get all unique subjects from timetable and requirements for this segment
                                 const allSubjects = new Set();
                                 const timetableState = store.getState().timetable;
-                                
+
                                 segmentClasses.forEach(cls => {
                                     const reqs = getClassRequirements(cls.id);
                                     Object.keys(reqs).forEach(s => allSubjects.add(s));
-                                    
+
                                     Object.values(timetableState)
                                         .filter(cell => cell.classId === cls.id && cell.subject)
                                         .forEach(cell => allSubjects.add(cell.subject));
@@ -353,7 +367,7 @@ export default function Settings() {
                                         <h3 className="subject-wise-title">
                                             {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} - Required Periods per Week by Subject
                                         </h3>
-                                        
+
                                         {subjects.length === 0 ? (
                                             <div className="no-subjects-message">
                                                 <Target size={48} />
@@ -384,10 +398,10 @@ export default function Settings() {
                                                                     const actual = getSubjectActualPeriods(cls.id, subject);
                                                                     const isMet = required === 0 || actual >= required;
                                                                     const hasRequirement = required > 0;
-                                                                    
+
                                                                     return (
-                                                                        <td 
-                                                                            key={cls.id} 
+                                                                        <td
+                                                                            key={cls.id}
                                                                             className={`requirement-cell 
                                                                                 ${!hasRequirement ? 'no-requirement' : ''} 
                                                                                 ${hasRequirement && !isMet ? 'has-deficit' : ''} 
@@ -399,8 +413,8 @@ export default function Settings() {
                                                                                     type="number"
                                                                                     value={required || ''}
                                                                                     onChange={(e) => setSubjectRequirement(
-                                                                                        cls.id, 
-                                                                                        subject, 
+                                                                                        cls.id,
+                                                                                        subject,
                                                                                         parseInt(e.target.value) || 0
                                                                                     )}
                                                                                     min="0"
@@ -438,6 +452,12 @@ export default function Settings() {
                                 );
                             })()}
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'users' && (
+                    <div className="settings-section">
+                        <UserManagement />
                     </div>
                 )}
 
@@ -505,25 +525,25 @@ export default function Settings() {
                         <div className="classes-list">
                             <h2 className="section-title">
                                 <BookOpen size={20} />
-                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Classes ({classes.filter(c => c.category === selectedSegment).length})
+                                {selectedSegment === 'primary' ? 'Primary' : 'Secondary'} Classes ({classes.filter(c => (c.category || 'secondary') === selectedSegment).length})
                             </h2>
-                            
+
                             <div className="classes-grid">
-                                {classes.filter(c => c.category === selectedSegment).map(cls => (
+                                {classes.filter(c => (c.category || 'secondary') === selectedSegment).map(cls => (
                                     <div key={cls.id} className="class-card glass">
                                         <div className="class-card-header">
                                             <div className="class-info">
                                                 <h3>{cls.name}</h3>
-                                                <span className="class-category">{cls.category}</span>
+                                                <span className="class-category">{cls.category || 'secondary'}</span>
                                             </div>
                                             <div className="class-actions">
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-secondary"
                                                     onClick={() => handleEditClass(cls)}
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-danger"
                                                     onClick={() => removeClass(cls.id)}
                                                 >

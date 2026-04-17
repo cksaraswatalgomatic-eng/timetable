@@ -206,6 +206,118 @@
   border-top: 1px solid var(--glass-border-light);
 }
 
+.user-info-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border-light);
+}
+
+[data-theme="dark"] .user-info-section {
+  background: var(--gray-800);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="dark"] .user-name {
+  color: var(--gray-50);
+}
+
+.user-role {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.logout-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0.5rem;
+  background: var(--gray-100);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--gray-600);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .logout-btn {
+  background: var(--gray-700);
+  color: var(--gray-400);
+}
+
+.logout-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.05);
+}
+
+.logout-btn:last-child:hover {
+  background: var(--danger);
+}
+
+/* Access Denied */
+.access-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.access-denied h2 {
+  margin: 0 0 1rem 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--gray-900);
+}
+
+[data-theme="dark"] .access-denied h2 {
+  color: var(--gray-50);
+}
+
+.access-denied p {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--gray-500);
+}
+
 /* ============================================
    MAIN CONTENT
    ============================================ */
